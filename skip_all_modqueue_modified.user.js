@@ -15,8 +15,8 @@
 // @match        *://*.donmai.us/modqueue?*
 // @match        *://booru.allthefallen.moe/modqueue
 // @icon         https://aibooru.zip/favicon.ico
-// @updateURL    https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscipts/main/skip_all_modqueue_modified.user.js
-// @downloadURL  https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscipts/main/skip_all_modqueue_modified.user.js
+// @updateURL    https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/skip_all_modqueue_modified.user.js
+// @downloadURL  https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/skip_all_modqueue_modified.user.js
 // @grant        none
 // ==/UserScript==
 

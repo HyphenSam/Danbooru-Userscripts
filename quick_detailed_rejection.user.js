@@ -6,8 +6,8 @@
 // @author       HyphenSam
 // @match        *://*.donmai.us/modqueue*
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscipts/main/quick_detailed_rejection.user.js
-// @downloadURL  https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscipts/main/quick_detailed_rejection.user.js
+// @updateURL    https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/quick_detailed_rejection.user.js
+// @downloadURL  https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/quick_detailed_rejection.user.js
 // ==/UserScript==
 
 (function() {
