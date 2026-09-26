@@ -25,6 +25,11 @@ A modified version of iodoff's userscript that skips all current posts in the mo
 
 Hides Pixiv artworks from blocked users or with blocked tags. Adds a "Block" button next to Follow buttons and a "Block tag" button to tag popups. Manage the blocklist or toggle filtering for the current tab from the userscript menu.
 
+[Install](https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/pixiv-blocklist.user.js)
+
+<details>
+<summary>Screenshots</summary>
+
 ![Profile block](asset/pixiv-blocklist-screenshot-1.png)
 
 ![Tag block](asset/pixiv-blocklist-screenshot-2.png)
@@ -33,4 +38,4 @@ Hides Pixiv artworks from blocked users or with blocked tags. Adds a "Block" but
 
 ![Block settings](asset/pixiv-blocklist-screenshot-4.png)
 
-[Install](https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/pixiv-blocklist.user.js)
+</details>
