@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Danbooru - Quick Detailed Rejection
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Adds a detailed rejection button to modqueue which auto-selects "Disinterest"
 // @author       HyphenSam
 // @match        *://*.donmai.us/modqueue*
+// @match        *://*.donmai.us/posts*
 // @grant        none
 // @updateURL    https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/quick_detailed_rejection.user.js
 // @downloadURL  https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/quick_detailed_rejection.user.js
