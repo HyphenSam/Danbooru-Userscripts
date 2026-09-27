@@ -17,8 +17,10 @@ Adds button in the modqueue to quickly add a detailed rejection message to a pos
 
 <details>
 <summary>Screenshots</summary>
+
 ![alt text](asset/quick-detailed-rejection-1.png)
 ![alt text](asset/quick-detailed-rejection-2.png)
+
 </details>
 
 ### Skip All (Modqueue) (Modified)
