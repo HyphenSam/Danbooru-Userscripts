@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv Blocklist
 // @namespace    pixiv-local-filter
-// @version      2.0.2
+// @version      2.0.3
 // @description  Hide Pixiv artworks from blocked users or with blocked tags.
 // @author       HyphenSam
 // @match        https://www.pixiv.net/*
@@ -195,6 +195,7 @@
         .pxb-user-btn { flex: none; margin-left: 8px; padding: 7px 20px; border-radius: 999px; font-size: 14px; }
         [data-full-width="true"] + .pxb-user-btn { display: block; width: 100%; margin: 8px 0 0; padding: 9px 20px; }
         .pxb-tag-btn { margin-right: 8px; padding: 2px 8px; border-radius: 4px; }
+        .pxb-tag-btn.pxb-tag-page-btn { margin: 0 0 0 8px; padding: 7px 20px; border-radius: 999px; font-size: 14px; }
         .pxb-user-btn:hover, .pxb-tag-btn:hover { filter: brightness(1.1); }
         .pxb-user-btn.pxb-on, .pxb-tag-btn.pxb-on { background: #666; }
 
@@ -405,6 +406,21 @@
         button.title = button.dataset.tag;
     }
 
+    function createTagButton(tag) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pxb-tag-btn';
+        button.dataset.tag = tag;
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const t = normTag(button.dataset.tag);
+            if (!blockedTags.delete(t)) blockedTags.add(t);
+            save();
+        });
+        return button;
+    }
+
     function addTagButtons() {
         for (const popup of document.querySelectorAll('[class*="PixpediaTooltip_wrapper"]')) {
             let button = popup.querySelector('.pxb-tag-btn');
@@ -413,17 +429,7 @@
                 const tag = hoveredTag || getTagFromHref(popup.querySelector('a[href*="/tags/"]')?.getAttribute('href'));
                 if (!tag) continue;
 
-                button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'pxb-tag-btn';
-                button.dataset.tag = tag;
-                button.addEventListener('click', event => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const t = normTag(button.dataset.tag);
-                    if (!blockedTags.delete(t)) blockedTags.add(t);
-                    save();
-                });
+                button = createTagButton(tag);
                 popup.append(button);
             }
 
@@ -434,6 +440,24 @@
                 encyclopedia.before(button);
             }
 
+            setTagButtonState(button);
+        }
+
+        // Tag search pages: next to the "Add to your favorites" button.
+        const header = document.querySelector('[data-ga4-label="header"][data-ga4-entity-id^="tag/"]');
+        const actions = header?.querySelector('[data-ga4-label="keyword_details"]')?.nextElementSibling;
+        if (actions) {
+            let tag;
+            try { tag = decodeURIComponent(header.dataset.ga4EntityId.slice(4)); } catch { return; }
+
+            let button = actions.querySelector('.pxb-tag-btn');
+            if (!button) {
+                button = createTagButton(tag);
+                button.classList.add('pxb-tag-page-btn');
+                actions.append(button);
+            }
+            // Pixiv reuses the header when navigating between tags.
+            button.dataset.tag = tag;
             setTagButtonState(button);
         }
     }
