@@ -2,7 +2,7 @@
 // @name         Danbooru - Quick Detailed Rejection
 // @namespace    http://tampermonkey.net/
 // @version      1.1
-// @description  Adds a detailed rejection button to modqueue which auto-selects "Disinterest"
+// @description  Adds a detailed rejection button to modqueue
 // @author       HyphenSam
 // @match        *://*.donmai.us/modqueue*
 // @match        *://*.donmai.us/posts*
@@ -31,7 +31,7 @@
                 newBtn.textContent = BUTTON_TEXT;
                 newBtn.href = "javascript:void(0)";
                 //newBtn.style.marginLeft = "2px";
-                newBtn.title = "Open Detailed Rejection with 'Disinterest' selected";
+                newBtn.title = "Open Detailed Rejection";
 
                 newBtn.addEventListener('click', (e) => {
                     e.preventDefault();
