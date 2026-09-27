@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv Blocklist
 // @namespace    pixiv-local-filter
-// @version      2.0.0
+// @version      2.0.1
 // @description  Hide Pixiv artworks from blocked users or with blocked tags. Makes no network requests of its own.
 // @author       HyphenSam
 // @match        https://www.pixiv.net/*
@@ -238,6 +238,11 @@
     // If no such boundary is found within a few levels, the artwork isn't
     // part of a list (e.g. a tag page's header image), so leave it alone.
     function findCard(anchor, id) {
+        // Home feed posts nest their links too deeply for the climb below.
+        // The wrapper also holds the divider line between posts.
+        const post = anchor.closest('[data-ga4-label="work_content"]');
+        if (post) return post.parentElement;
+
         let card = anchor;
         let el = anchor.parentElement;
         for (let depth = 0; depth < 6 && el && el !== document.body; depth++) {
