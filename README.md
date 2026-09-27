@@ -19,6 +19,7 @@ Adds button in the modqueue to quickly add a detailed rejection message to a pos
 <summary>Screenshots</summary>
 
 ![alt text](asset/quick-detailed-rejection-1.png)
+
 ![alt text](asset/quick-detailed-rejection-2.png)
 
 </details>
@@ -41,7 +42,6 @@ Hides Pixiv artworks from blocked users or with blocked tags. Adds a "Block" but
 <summary>Screenshots</summary>
 
 ![Profile block](asset/pixiv-blocklist-screenshot-1.png)
-
 ![Tag block](asset/pixiv-blocklist-screenshot-2.png)
 
 ![Userscript manager](asset/pixiv-blocklist-screenshot-3.png)
