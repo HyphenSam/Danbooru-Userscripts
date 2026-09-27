@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Pixiv Blocklist
 // @namespace    pixiv-local-filter
-// @version      2.0.1
-// @description  Hide Pixiv artworks from blocked users or with blocked tags. Makes no network requests of its own.
+// @version      2.0.2
+// @description  Hide Pixiv artworks from blocked users or with blocked tags.
 // @author       HyphenSam
 // @match        https://www.pixiv.net/*
 // @grant        GM_getValue
@@ -18,10 +18,6 @@
 
 (() => {
     'use strict';
-
-    // ------------------------------------------------------------
-    // Storage (same keys as v1, so existing blocklists carry over)
-    // ------------------------------------------------------------
 
     const KEYS = {
         users: 'pixivFilter_blockedUsers_v1',
@@ -68,7 +64,7 @@
     // (its own fetch/XHR responses and __NEXT_DATA__).
     // ------------------------------------------------------------
 
-    const artworks = new Map(); // artworkId -> { userId, tags: [lowercase names + translations] }
+    const artworks = new Map(); // artworkId, "novel/id" or "collection/id" -> { userId, tags: [lowercase names + translations] }
     const knownNames = new Map(); // userId -> userName
     const translations = new Map(); // tag -> English translation
 
@@ -115,11 +111,13 @@
             const userId = o.userId ?? o.user_id;
             const userName = o.userName ?? o.user_name;
 
-            // textCount/wordCount mark novels, whose IDs are a separate namespace.
-            if (id && userId && o.tags && !('textCount' in o) && !('wordCount' in o)) {
+            // Novels and collections have their own ID namespaces, so key them
+            // the way home feed posts label them (e.g. "novel/123").
+            if (id && userId && o.tags) {
+                const prefix = 'textCount' in o || 'wordCount' in o ? 'novel/' : o.type === 'collection' ? 'collection/' : '';
                 const tags = tagNames(o.tags);
                 if (tags) {
-                    artworks.set(String(id), { userId: String(userId), tags });
+                    artworks.set(prefix + String(id), { userId: String(userId), tags });
                     found = true;
                 }
             }
@@ -282,7 +280,11 @@
         if (userId && blockedUsers.has(userId)) {
             return `user ${userId}`;
         }
-        const tag = artworks.get(id)?.tags.find(t => blockedTags.has(t) || blockedTags.has(translations.get(t)));
+        return tagBlockReason(artworks.get(id));
+    }
+
+    function tagBlockReason(entry) {
+        const tag = entry?.tags.find(t => blockedTags.has(t) || blockedTags.has(translations.get(t)));
         return tag ? `tag ${tag}` : '';
     }
 
@@ -298,6 +300,19 @@
             const card = getCard(anchor, id);
             if (!card || decisions.get(card)) continue;
             decisions.set(card, enabled ? blockReason(anchor, card, id) : '');
+        }
+
+        // Novel and collection posts in the home feed have no artwork links.
+        for (const post of document.querySelectorAll('[data-ga4-label="work_content"]')) {
+            const card = post.parentElement;
+            if (decisions.has(card)) continue;
+            const entry = artworks.get(post.dataset.ga4EntityId);
+            const userId = entry?.userId || getUserIdFromHref(post.querySelector('a[href*="/users/"]')?.getAttribute('href'));
+            let reason = '';
+            if (enabled) {
+                reason = userId && blockedUsers.has(userId) ? `user ${userId}` : tagBlockReason(entry);
+            }
+            decisions.set(card, reason);
         }
 
         for (const el of document.querySelectorAll('[data-pxb-hidden]')) {
