@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv Blocklist
 // @namespace    pixiv-local-filter
-// @version      2.0.3
+// @version      2.1.0
 // @description  Hide Pixiv artworks from blocked users or with blocked tags.
 // @author       HyphenSam
 // @match        https://www.pixiv.net/*
@@ -23,6 +23,7 @@
         users: 'pixivFilter_blockedUsers_v1',
         tags: 'pixivFilter_blockedTags_v1',
         names: 'pixivFilter_userNames_v1',
+        showButtons: 'pixivFilter_showButtons_v1',
     };
 
     const normTag = tag => String(tag).trim().toLowerCase();
@@ -30,11 +31,14 @@
     let blockedUsers;
     let blockedTags;
     let userNames;
+    let showButtons;
 
     function load() {
         blockedUsers = new Set(GM_getValue(KEYS.users, []).map(String));
         blockedTags = new Set(GM_getValue(KEYS.tags, []).map(normTag));
         userNames = GM_getValue(KEYS.names, {});
+        showButtons = GM_getValue(KEYS.showButtons, true);
+        document.documentElement.toggleAttribute('data-pxb-no-buttons', !showButtons);
     }
 
     function save() {
@@ -187,6 +191,7 @@
     const style = document.createElement('style');
     style.textContent = `
         [data-pxb-hidden] { display: none !important; }
+        [data-pxb-no-buttons] .pxb-user-btn, [data-pxb-no-buttons] .pxb-tag-btn { display: none !important; }
 
         .pxb-user-btn, .pxb-tag-btn {
             border: 0; cursor: pointer; font: 600 12px/18px sans-serif;
@@ -549,6 +554,11 @@
     }
 
     GM_registerMenuCommand('Manage blocklist', openManager);
+
+    GM_registerMenuCommand('Toggle block buttons', () => {
+        GM_setValue(KEYS.showButtons, !showButtons);
+        load();
+    });
 
     GM_registerMenuCommand('Toggle filtering for this tab', () => {
         enabled = !enabled;
