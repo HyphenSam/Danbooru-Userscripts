@@ -32,6 +32,12 @@ A modified version of iodoff's userscript that skips all current posts in the mo
 
 ![Skip all button](asset/skip-all-screenshot.png)
 
+### AI Check (Modified)
+
+A modified version of waterflame's [userscript](https://danbooru.donmai.us/forum_posts/328734) that checks an artist's existing posts on the upload page. Shows red if any post is tagged `ai-generated`, orange or yellow depending on how many posts are deleted, and green otherwise.
+
+[Install](https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/ai-check.user.js)
+
 ### Pixiv Blocklist
 
 Hides Pixiv artworks from blocked users or with blocked tags. Adds a "Block" button next to Follow buttons and a "Block tag" button to tag popups. Manage the blocklist or toggle filtering for the current tab from the userscript menu.
