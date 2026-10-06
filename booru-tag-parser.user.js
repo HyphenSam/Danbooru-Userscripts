@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Booru Tag Parser
 // @namespace    booru-tag-parser
-// @version      2.0.0
-// @description  Copy the current post's tags and rating to the clipboard for easy import into another program or booru.
+// @version      2.1.0
+// @description  Copy the current post's tags and rating, or its post and source links, to the clipboard for easy import into another program or booru.
 // @author       HyphenSam, JetBoom
 // @match        *://demo.illustration2vec.net/*
 // @include      /^https?:\/\/[^\/]*booru[^\/]*\/(post|index\.php\?id=|[^?]*\?page=post)/
@@ -45,6 +45,7 @@
 
     const DEFAULTS = {
         shortcut: { code: 'BracketRight', ctrl: false, alt: false, shift: false, meta: false, label: ']' },
+        linksShortcut: false,
         i2vConfidence: 20,
         attachExplicit: true,
         attachGid: true,
@@ -52,6 +53,7 @@
 
     // false means the shortcut is disabled
     let shortcut = GM_getValue('shortcut', DEFAULTS.shortcut);
+    let linksShortcut = GM_getValue('links_shortcut', DEFAULTS.linksShortcut);
     let i2vConfidence = GM_getValue('iv2_confidence_rating', DEFAULTS.i2vConfidence);
     let attachExplicit = GM_getValue('attach_explicit', DEFAULTS.attachExplicit);
     let attachGid = GM_getValue('attach_gid', DEFAULTS.attachGid);
@@ -242,6 +244,35 @@
     }
 
     // ------------------------------------------------------------
+    // Link copying
+    // ------------------------------------------------------------
+
+    // Danbooru, Gelbooru and Moebooru all show the source as <li>Source: <a href="...">...</a></li>
+    function getSourceUrl() {
+        for (const item of document.querySelectorAll('li')) {
+            if (!/^\s*Source:/.test(item.textContent)) continue;
+
+            const link = item.querySelector('a[href]');
+            if (link) return link.href;
+        }
+    }
+
+    function copyLinks() {
+        // The canonical link drops search parameters, e.g. Danbooru's ?q=
+        const postUrl = document.querySelector('link[rel="canonical"]')?.href ?? location.href;
+        const sourceUrl = getSourceUrl();
+
+        if (!sourceUrl) {
+            GM_setClipboard(postUrl);
+            notify('No source found, copied post link');
+            return;
+        }
+
+        GM_setClipboard(`${postUrl}\n${sourceUrl}`);
+        notify('Copied post and source links to clipboard');
+    }
+
+    // ------------------------------------------------------------
     // UI root
     // ------------------------------------------------------------
 
@@ -337,16 +368,24 @@
         return element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName);
     }
 
-    document.addEventListener('keydown', e => {
-        if (!shortcut || e.repeat || isEditable(e.target)) return;
+    function matchesShortcut(e, target) {
+        return target
+            && (e.code || e.key) === target.code
+            && e.ctrlKey === target.ctrl
+            && e.altKey === target.alt
+            && e.shiftKey === target.shift
+            && e.metaKey === target.meta;
+    }
 
-        if ((e.code || e.key) === shortcut.code
-            && e.ctrlKey === shortcut.ctrl
-            && e.altKey === shortcut.alt
-            && e.shiftKey === shortcut.shift
-            && e.metaKey === shortcut.meta) {
+    document.addEventListener('keydown', e => {
+        if (e.repeat || isEditable(e.target)) return;
+
+        if (matchesShortcut(e, shortcut)) {
             e.preventDefault();
             copyTags();
+        } else if (matchesShortcut(e, linksShortcut)) {
+            e.preventDefault();
+            copyLinks();
         }
     });
 
@@ -355,16 +394,21 @@
     // ------------------------------------------------------------
 
     function openSettings() {
-        let pendingShortcut = shortcut;
+        const pending = { shortcut, linksShortcut };
 
         const dialog = document.createElement('dialog');
         dialog.innerHTML = `
             <h2>Booru Tag Parser</h2>
-            <h3>Copy shortcut</h3>
-            <p>Click the box, then press a key combination.</p>
-            <div class="row">
+            <p>Click a shortcut box, then press a key combination.</p>
+            <h3>Copy tags shortcut</h3>
+            <div class="row" data-name="shortcut">
                 <input class="shortcut" readonly>
                 <button type="button" class="default">Default</button>
+                <button type="button" class="clear">Clear</button>
+            </div>
+            <h3>Copy links shortcut</h3>
+            <div class="row" data-name="linksShortcut">
+                <input class="shortcut" readonly>
                 <button type="button" class="clear">Clear</button>
             </div>
             <h3>nhentai</h3>
@@ -384,55 +428,70 @@
             dialog.addEventListener(type, e => e.stopPropagation());
         }
 
-        const shortcutBox = dialog.querySelector('.shortcut');
+        const shortcutRows = dialog.querySelectorAll('.row');
         const explicitBox = dialog.querySelector('.explicit');
         const gidBox = dialog.querySelector('.gid');
         const confidenceBox = dialog.querySelector('.confidence');
 
-        const showShortcut = () => {
-            shortcutBox.value = pendingShortcut?.label ?? '';
-            shortcutBox.placeholder = 'Disabled';
+        const showShortcuts = () => {
+            for (const row of shortcutRows) {
+                const box = row.querySelector('.shortcut');
+                box.value = pending[row.dataset.name]?.label ?? '';
+                box.placeholder = 'Disabled';
+            }
         };
         const fill = values => {
-            pendingShortcut = values.shortcut;
-            showShortcut();
+            pending.shortcut = values.shortcut;
+            pending.linksShortcut = values.linksShortcut;
+            showShortcuts();
             explicitBox.checked = values.attachExplicit;
             gidBox.checked = values.attachGid;
             confidenceBox.value = values.i2vConfidence;
         };
-        fill({ shortcut, attachExplicit, attachGid, i2vConfidence });
+        fill({ shortcut, linksShortcut, attachExplicit, attachGid, i2vConfidence });
 
-        shortcutBox.addEventListener('focus', () => {
-            shortcutBox.value = '';
-            shortcutBox.placeholder = 'Press a key...';
-        });
-        shortcutBox.addEventListener('blur', showShortcut);
-        shortcutBox.addEventListener('keydown', e => {
-            // Tab moves focus and Escape closes the dialog as usual
-            if (MODIFIER_KEYS.includes(e.key) || e.key === 'Tab' || e.key === 'Escape') return;
+        for (const row of shortcutRows) {
+            const name = row.dataset.name;
+            const box = row.querySelector('.shortcut');
 
-            e.preventDefault();
-            pendingShortcut = shortcutFromEvent(e);
-            shortcutBox.blur();
-        });
+            box.addEventListener('focus', () => {
+                box.value = '';
+                box.placeholder = 'Press a key...';
+            });
+            box.addEventListener('blur', showShortcuts);
+            box.addEventListener('keydown', e => {
+                // Tab moves focus and Escape closes the dialog as usual
+                if (MODIFIER_KEYS.includes(e.key) || e.key === 'Tab' || e.key === 'Escape') return;
 
-        dialog.querySelector('.default').onclick = () => {
-            pendingShortcut = DEFAULTS.shortcut;
-            showShortcut();
-        };
-        dialog.querySelector('.clear').onclick = () => {
-            pendingShortcut = false;
-            showShortcut();
-        };
+                e.preventDefault();
+                pending[name] = shortcutFromEvent(e);
+                box.blur();
+            });
+
+            const defaultButton = row.querySelector('.default');
+            if (defaultButton) {
+                defaultButton.onclick = () => {
+                    pending[name] = DEFAULTS[name];
+                    showShortcuts();
+                };
+            }
+            row.querySelector('.clear').onclick = () => {
+                pending[name] = false;
+                showShortcuts();
+            };
+        }
+
         dialog.querySelector('.reset-all').onclick = () => fill(DEFAULTS);
         dialog.querySelector('.cancel').onclick = () => dialog.close();
         dialog.querySelector('.save').onclick = () => {
-            shortcut = pendingShortcut;
+            shortcut = pending.shortcut;
+            linksShortcut = pending.linksShortcut;
             attachExplicit = explicitBox.checked;
             attachGid = gidBox.checked;
             i2vConfidence = Math.min(100, Math.max(0, Number(confidenceBox.value) || 0));
 
             GM_setValue('shortcut', shortcut);
+            GM_setValue('links_shortcut', linksShortcut);
             GM_setValue('attach_explicit', attachExplicit);
             GM_setValue('attach_gid', attachGid);
             GM_setValue('iv2_confidence_rating', i2vConfidence);
@@ -445,5 +504,6 @@
     }
 
     GM_registerMenuCommand('Copy tags', copyTags);
+    GM_registerMenuCommand('Copy links', copyLinks);
     GM_registerMenuCommand('Settings', openSettings);
 })();
