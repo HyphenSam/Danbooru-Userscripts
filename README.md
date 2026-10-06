@@ -55,3 +55,9 @@ Hides Pixiv artworks from blocked users or with blocked tags. Adds a "Block" but
 ![Block settings](asset/pixiv-blocklist-screenshot-4.png)
 
 </details>
+
+### Booru Tag Parser
+
+A refactor of JetBoom's [boorutagparser](https://github.com/JetBoom/boorutagparser/). Copies the current post's tags and rating to the clipboard on most boorus and nhentai, ready to import into Hydrus or another booru. Copy tags from the userscript menu or with a shortcut (`]` by default). Change the shortcut and other options from the userscript menu.
+
+[Install](https://raw.githubusercontent.com/HyphenSam/Danbooru-Userscripts/master/booru-tag-parser.user.js)
